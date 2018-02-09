@@ -43,6 +43,12 @@ object PriorityWeigher : LookupElementWeigher("kotlin.priority") {
             = element.getUserData(ITEM_PRIORITY_KEY) ?: ItemPriority.DEFAULT
 }
 
+object PreferDslMembers : LookupElementWeigher("kotlin.preferDsl") {
+    override fun weigh(element: LookupElement, context: WeighingContext): Boolean {
+        return (element.isDslMember ?: false).not()
+    }
+}
+
 class NotImportedWeigher(private val classifier: ImportableFqNameClassifier) : LookupElementWeigher("kotlin.notImported") {
     private enum class Weight {
         default,
