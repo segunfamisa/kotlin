@@ -26,7 +26,6 @@ import com.intellij.psi.*
 import com.intellij.psi.impl.PsiSubstitutorImpl
 import com.intellij.psi.impl.java.stubs.PsiJavaFileStub
 import com.intellij.psi.impl.source.PsiImmediateClassType
-import com.intellij.psi.scope.PsiScopeProcessor
 import com.intellij.psi.search.SearchScope
 import com.intellij.psi.stubs.IStubElementType
 import com.intellij.psi.stubs.StubElement
@@ -45,10 +44,7 @@ import org.jetbrains.kotlin.asJava.builder.InvalidLightClassDataHolder
 import org.jetbrains.kotlin.asJava.builder.LightClassData
 import org.jetbrains.kotlin.asJava.builder.LightClassDataHolder
 import org.jetbrains.kotlin.asJava.builder.LightClassDataProviderForClassOrObject
-import org.jetbrains.kotlin.asJava.elements.FakeFileForLightClass
-import org.jetbrains.kotlin.asJava.elements.KtLightIdentifier
-import org.jetbrains.kotlin.asJava.elements.KtLightModifierList
-import org.jetbrains.kotlin.asJava.elements.KtLightPsiReferenceList
+import org.jetbrains.kotlin.asJava.elements.*
 import org.jetbrains.kotlin.asJava.hasInterfaceDefaultImpls
 import org.jetbrains.kotlin.builtins.KotlinBuiltIns
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
@@ -106,31 +102,11 @@ abstract class KtLightClassForSourceDeclaration(protected val classOrObject: KtC
     }
 
     private val _containingFile: PsiFile by lazyPub {
-        object : FakeFileForLightClass(
-                classOrObject.containingKtFile,
-                { if (classOrObject.isTopLevel()) this else create(getOutermostClassOrObject(classOrObject))!! },
-                { getJavaFileStub() }
-        ) {
-            override fun findReferenceAt(offset: Int) = ktFile.findReferenceAt(offset)
-
-            override fun processDeclarations(
-                    processor: PsiScopeProcessor,
-                    state: ResolveState,
-                    lastParent: PsiElement?,
-                    place: PsiElement): Boolean {
-                if (!super.processDeclarations(processor, state, lastParent, place)) return false
-
-                // We have to explicitly process package declarations if current file belongs to default package
-                // so that Java resolve can find classes located in that package
-                val packageName = packageName
-                if (!packageName.isEmpty()) return true
-
-                val aPackage = JavaPsiFacade.getInstance(myManager.project).findPackage(packageName)
-                if (aPackage != null && !aPackage.processDeclarations(processor, state, null, place)) return false
-
-                return true
-            }
-        }
+        FakeFileForLightClassFactory.create(
+            classOrObject.containingKtFile,
+            { if (classOrObject.isTopLevel()) this else create(getOutermostClassOrObject(classOrObject))!! },
+            { getJavaFileStub() }
+        )
     }
 
     override fun getContainingFile(): PsiFile? = _containingFile
