@@ -795,6 +795,8 @@
 
     <lang.jvm.actions.jvmElementActionsFactory implementation="org.jetbrains.kotlin.idea.quickfix.crossLanguage.KotlinElementActionsFactory"/>
 
+    <resolveScopeEnlarger implementation="org.jetbrains.kotlin.idea.KotlinResolveScopeEnlarger"/>
+
     <sdkType implementation="org.jetbrains.kotlin.idea.framework.KotlinSdkType"/>
 
     <intentionAction>
